@@ -1,23 +1,23 @@
 # -*- coding: utf-8 -*-
+import easygui
+import xml.etree.ElementTree as ET
+import os
+import pandas as pd
 
 # prompt user for twb file
 
-import easygui
-
 file = easygui.fileopenbox(filetypes=['*.twb'])
 
-import xml.etree.ElementTree as ET
-
+# parse the twb file
 tree = ET.parse(file)
 root = tree.getroot()
 
 # print(root.tag)
 # print(root.attrib)
 
-calcList = []
-calcDict = {}
-
 # create a dictionary of name and tableau generated name
+
+calcDict = {}
 
 for item in root.findall('.//column[@caption]'):
     if item.find(".//calculation") is None:
@@ -29,36 +29,48 @@ for item in root.findall('.//column[@caption]'):
 
 
 # list of calc's name, tableau generated name, and calculation/formula
+calcList = []
 
 for item in root.findall('.//column[@caption]'):
     if item.find(".//calculation") is None:
         continue
     else:
-        calc_caption = '[' + item.attrib['caption'] + ']'
-        calc_name = item.attrib['name']
-        calc_formula = item.find(".//calculation").attrib['formula']
-        for name, caption in calcDict.items():
-            calc_formula = calc_formula.replace(name, caption)
-            calc_formula = calc_formula.replace('\r', ' ')
-            calc_formula = calc_formula.replace('\n', ' ')
+        if item.find(".//calculation[@formula]") is None:
+            continue
+        else:
+            calc_caption = '[' + item.attrib['caption'] + ']'
+            calc_name = item.attrib['name']
+            calc_raw_formula = item.find(".//calculation").attrib['formula']
+            calc_comment = ''
+            calc_formula = ''
+            for line in calc_raw_formula.split('\r\n'):
+                if line.startswith('//'):
+                    calc_comment = calc_comment + line + ' '
+                else:
+                    calc_formula = calc_formula + line + ' '
+            for name, caption in calcDict.items():
+                calc_formula = calc_formula.replace(name, caption)
 
-        calc_row = (calc_caption, calc_formula)
-        calcList.append(list(calc_row))
+            calc_row = (calc_caption, calc_name, calc_formula, calc_comment)
+            calcList.append(list(calc_row))
 
 # print(calcList)
 
 # convert the list of calcs into a data frame
-import pandas as pd
-
 data = calcList
 
-data = pd.DataFrame(data, columns=['Calculation Name', 'Calculation Formula'])
+data = pd.DataFrame(data, columns=['Name', 'Remote Name', 'Formula', 'Comment'])
 
 # remove duplicate rows from data frame
 data = data.drop_duplicates(subset=None, keep='first', inplace=False)
 
-# print(data)
+print(data)
 
 # export to csv
+# get the name of the file
 
-data.to_csv(r'calculationList.csv')
+base = os.path.basename(file)
+os.path.splitext(base)
+filename = os.path.splitext(base)[0]
+
+data.to_csv(filename + '.csv')
