@@ -25,9 +25,6 @@ file = easygui.fileopenbox(filetypes=['*.twb'])
 tree = ET.parse(file)
 root = tree.getroot()
 
-# print(root.tag)
-# print(root.attrib)
-
 # create a dictionary of name and tableau generated name
 
 calcDict = {}
@@ -37,9 +34,6 @@ for item in root.findall('.//column[@caption]'):
         continue
     else:
         calcDict[item.attrib['name']] = '[' + item.attrib['caption'] + ']'
-
-# print(calcDict)
-
 
 # list of calc's name, tableau generated name, and calculation/formula
 calcList = []
@@ -67,8 +61,6 @@ for item in root.findall('.//column[@caption]'):
             calc_row = (calc_caption, calc_name, calc_formula, calc_comment)
             calcList.append(list(calc_row))
 
-# print(calcList)
-
 # convert the list of calcs into a data frame
 data = calcList
 
@@ -76,8 +68,6 @@ data = pd.DataFrame(data, columns=['Name', 'Remote Name', 'Formula', 'Comment'])
 
 # remove duplicate rows from data frame
 data = data.drop_duplicates(subset=None, keep='first', inplace=False)
-
-print(data)
 
 # export to csv
 # get the name of the file
