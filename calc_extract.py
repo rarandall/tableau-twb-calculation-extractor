@@ -1,4 +1,17 @@
 # -*- coding: utf-8 -*-
+
+# This script will extract calculated fields and parameters
+# from a Tableau workbook and output a CSV file with four columns:
+# Calculation Name, Remote Name, Formula, and Comment
+# The comment is from the calculated field when a // is used
+# Comments should be placed before the calculation to be extracted properly
+
+#==========================================
+# Title:  Tableau TWB Calculation Extractor
+# Author: Ray Randall, github.com/rarandall
+# Date:   24 May 2019
+#==========================================
+
 import easygui
 import xml.etree.ElementTree as ET
 import os
